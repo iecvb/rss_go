@@ -2,6 +2,7 @@ package rssfunction
 
 import (
 	"encoding/json"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -90,14 +91,10 @@ func GetPodcast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	//json.NewEncoder(w).Encode(podcastData)
-	// Use json.Marshal para codificar a lista em JSON
-	jsonData, err := json.Marshal(podcastData)
-	if err != nil {
-		log.Println(err)
-		return
-	}
+	w.Header().Set("Content-Encoding", "gzip")
+    gz := gzip.NewWriter(w)
+    defer gz.Close()
 
-	// Agora você pode escrever o JSON codificado na resposta
-	w.Write(jsonData)
+	json.NewEncoder(gz).Encode(podcastData)
+	
 }
