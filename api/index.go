@@ -90,5 +90,14 @@ func GetPodcast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(podcastData)
+	//json.NewEncoder(w).Encode(podcastData)
+	// Use json.Marshal para codificar a lista em JSON
+	jsonData, err := json.Marshal(podcastData)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	// Agora você pode escrever o JSON codificado na resposta
+	w.Write(jsonData)
 }
