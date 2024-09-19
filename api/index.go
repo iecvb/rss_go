@@ -2,9 +2,11 @@ package rssfunction
 
 import (
 	"encoding/json"
+	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strings"
 
 	"github.com/beevik/etree"
 )
@@ -114,7 +116,7 @@ func GetPodcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Verificar se o cliente aceita gzip
+// Verificar se o cliente aceita gzip
 	var writer http.ResponseWriter = w
 	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
 		w.Header().Set("Content-Encoding", "gzip")
