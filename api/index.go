@@ -58,6 +58,31 @@ func parsePodcastData(xmlText string) ([]PodcastItem, error) {
 	return podcastData, nil
 }
 
+// Middleware para adicionar compressão Gzip
+func gzipMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+		gzw := gzipResponseWriter{Writer: gz, ResponseWriter: w}
+		next.ServeHTTP(gzw, r)
+	})
+}
+
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	Writer *gzip.Writer
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}
+
 func setCORSHeaders(w http.ResponseWriter) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
@@ -65,7 +90,7 @@ func setCORSHeaders(w http.ResponseWriter) {
 }
 
 func GetPodcast(w http.ResponseWriter, r *http.Request) {
-    //setCORSHeaders(w)
+    setCORSHeaders(w)
 
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
@@ -89,7 +114,43 @@ func GetPodcast(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Verificar se o cliente aceita gzip
+	var writer http.ResponseWriter = w
+	if strings.Contains(r.Header.Get("Accept-Encoding"), "gzip") {
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+		writer = gzipResponseWriter{Writer: gz, ResponseWriter: w}
+	}
+
+	// Minificar JSON sem espaços extras
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(podcastData)
+	jsonBytes, err := json.Marshal(podcastData)
+	if err != nil {
+		http.Error(w, "Erro ao gerar JSON", http.StatusInternalServerError)
+		return
+	}
+
+	writer.Write(jsonBytes)
+}
+
+// gzipResponseWriter implementa a resposta para usar gzip
+type gzipResponseWriter struct {
+	http.ResponseWriter
+	Writer *gzip.Writer
+}
+
+func (w gzipResponseWriter) Write(b []byte) (int, error) {
+	return w.Writer.Write(b)
+}	w.Header().Set("Content-Type", "application/json")
+	//json.NewEncoder(w).Encode(podcastData)
+	// Minificar JSON sem espaços extras	
+	jsonBytes, err := json.Marshal(podcastData)
+	if err != nil {
+		http.Error(w, "Erro ao gerar JSON", http.StatusInternalServerError)
+		return
+	}
+	w.Write(jsonBytes)
+	gzipMiddleware(http.HandlerFunc(GetPodcast)))
 	
 }
