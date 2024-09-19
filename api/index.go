@@ -2,7 +2,6 @@ package rssfunction
 
 import (
 	"encoding/json"
-	"compress/gzip"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -66,7 +65,7 @@ func setCORSHeaders(w http.ResponseWriter) {
 }
 
 func GetPodcast(w http.ResponseWriter, r *http.Request) {
-    setCORSHeaders(w)
+    //setCORSHeaders(w)
 
 	if r.Method == http.MethodOptions {
 		w.WriteHeader(http.StatusOK)
@@ -91,10 +90,6 @@ func GetPodcast(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Encoding", "gzip")
-    gz := gzip.NewWriter(w)
-    defer gz.Close()
-
-	json.NewEncoder(gz).Encode(podcastData)
+	json.NewEncoder(w).Encode(podcastData)
 	
 }
