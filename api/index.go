@@ -14,9 +14,9 @@ import (
 const PODCAST_URL = "https://anchor.fm/s/49f0c604/podcast/rss"
 
 type PodcastItem struct {
-	Title        string `json:"title"`
-	EnclosureURL string `json:"enclosureUrl"`
-	ImageURL     string `json:"imageUrl"`
+	Title        string `json:"name"`
+	EnclosureURL string `json:"url"`
+	ImageURL     string `json:"cover_art_url"`
 }
 
 func fetchPodcastData() (string, error) {
